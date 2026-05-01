@@ -7,7 +7,14 @@
     <link rel="preconnect" href="https://api.open-meteo.com" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="intro-active">
+    <section class="intro-screen" id="introScreen" aria-label="Guess The Weather intro">
+      <div class="intro-weather intro-weather-a"></div>
+      <div class="intro-weather intro-weather-b"></div>
+      <img class="intro-logo" src="assets/guess_the_weather_logo.png" alt="Guess The Weather" />
+      <p class="intro-copy">Twenty places are waiting today. Guess carefully: your streak likes confidence.</p>
+      <button class="primary-button intro-button" id="beginButton" type="button">Begin</button>
+    </section>
     <img class="app-logo corner-logo" src="assets/guess_the_weather_logo.png" alt="Guess The Weather logo" />
     <div class="floating-actions" aria-label="Game controls">
       <button class="debug-button" id="debugButton" type="button" title="Reset today's debug run">Debug</button>

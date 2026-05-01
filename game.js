@@ -99,6 +99,8 @@ const questionTypes = [
 ];
 
 const el = {
+  introScreen: document.querySelector("#introScreen"),
+  beginButton: document.querySelector("#beginButton"),
   placeCountry: document.querySelector("#placeCountry"),
   placeName: document.querySelector("#placeName"),
   placeChip: document.querySelector(".place-chip"),
@@ -135,6 +137,7 @@ const todayKey = new Intl.DateTimeFormat("en-CA", {
 let state = loadState();
 let currentRound = null;
 let awaitingNext = false;
+let introStarted = false;
 
 init();
 
@@ -153,6 +156,8 @@ function init() {
 }
 
 function bindEvents() {
+  el.beginButton.addEventListener("click", beginGame);
+
   el.nextButton.addEventListener("click", () => {
     if (state.today.finished) {
       openStats();
@@ -165,6 +170,22 @@ function bindEvents() {
   el.closeStats.addEventListener("click", () => el.statsDialog.close());
   el.shareButton.addEventListener("click", shareScore);
   el.debugButton.addEventListener("click", resetDebugDay);
+}
+
+function beginGame() {
+  if (introStarted) return;
+  introStarted = true;
+  el.beginButton.disabled = true;
+  el.introScreen.classList.add("is-exiting");
+  document.body.classList.remove("intro-active");
+
+  setTimeout(() => {
+    el.introScreen.hidden = true;
+  }, 680);
+
+  if (!state.today.finished) {
+    setTimeout(startRound, 240);
+  }
 }
 
 async function startRound() {
