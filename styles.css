@@ -708,11 +708,13 @@ dialog::backdrop {
   }
 
   .globe-card {
-    bottom: 12px;
-    width: min(205px, 56%);
+    bottom: 16px;
+    width: min(235px, calc(100vw - 96px));
   }
 
   .globe {
+    width: 170px;
+    margin: 0 auto;
     filter: drop-shadow(0 18px 30px rgba(21, 69, 128, 0.24));
   }
 
@@ -724,7 +726,7 @@ dialog::backdrop {
   }
 
   .place-chip {
-    width: min(235px, 118%);
+    width: 100%;
     padding: 8px 12px 10px;
     border-radius: 17px;
   }
@@ -870,7 +872,11 @@ dialog::backdrop {
   }
 
   .globe-card {
-    width: min(178px, 53%);
+    width: min(212px, calc(100vw - 86px));
+  }
+
+  .globe {
+    width: 148px;
   }
 
   .place-chip {
