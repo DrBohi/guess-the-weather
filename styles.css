@@ -289,9 +289,9 @@ button {
 .globe-card {
   position: absolute;
   left: 50%;
-  bottom: 20%;
-  width: min(380px, 80%);
-  transform: translateX(-50%);
+  top: 50%;
+  width: min(480px, 88%);
+  transform: translate(-50%, -50%);
   text-align: center;
 }
 
@@ -323,26 +323,27 @@ button {
 
 .place-chip {
   position: absolute;
-  left: 50%;
-  bottom: 10%;
-  width: min(330px, 100%);
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  width: auto;
   margin: 0;
   padding: 14px 18px 16px;
   border: 1px solid rgba(255, 255, 255, 0.58);
-  border-radius: 24px;
+  border-radius: 0 0 18px 18px;
   color: #11203a;
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 18px 42px rgba(43, 72, 104, 0.15);
   backdrop-filter: blur(18px);
-  transform: translateX(-50%) translateY(0);
   text-align: center;
+  transform: translateY(0);
   transition: opacity 0.28s ease, transform 0.28s ease, filter 0.28s ease;
   will-change: opacity, transform, filter;
 }
 
 .place-chip.is-changing {
   opacity: 0;
-  transform: translateX(-50%) translateY(14px) scale(0.98);
+  transform: translateY(14px) scale(0.98);
   filter: blur(6px);
 }
 
@@ -735,9 +736,9 @@ dialog::backdrop {
 }
 
 @keyframes placeReveal {
-  0% { opacity: 0; transform: translateX(-50%) translateY(18px) scale(0.97); filter: blur(8px); }
-  55% { opacity: 1; transform: translateX(-50%) translateY(-3px) scale(1.01); filter: blur(0); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); filter: blur(0); }
+  0% { opacity: 0; transform: translateY(18px) scale(0.97); filter: blur(8px); }
+  55% { opacity: 1; transform: translateY(-3px) scale(1.01); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
 @media (max-width: 860px) {
@@ -760,8 +761,7 @@ dialog::backdrop {
   }
 
   .globe-card {
-    bottom: 28px;
-    width: min(300px, 76%);
+    width: min(340px, 84%);
   }
 
   .game-panel {
@@ -845,9 +845,9 @@ dialog::backdrop {
   }
 
   .sky-panel {
-    min-height: 262px;
-    height: 31svh;
-    max-height: 300px;
+    min-height: 320px;
+    height: 38svh;
+    max-height: 380px;
     border-radius: 22px;
   }
 
@@ -877,33 +877,28 @@ dialog::backdrop {
   }
 
   .globe-card {
-    left: 50%;
-    right: auto;
-    bottom: 16px;
-    width: min(200px, 62%);
-    transform: translateX(-50%);
+    width: min(300px, 88%);
   }
 
   .globe {
     width: 100%;
     margin: 0;
-    border-radius: 16px;
+    border-radius: 18px;
     box-shadow: 0 14px 36px rgba(21, 69, 128, 0.22);
   }
 
   .earth-image {
-    border-radius: 16px;
+    border-radius: 18px;
   }
 
   .place-chip {
-    left: 50%;
-    right: auto;
-    bottom: 12px;
-    width: min(235px, calc(100vw - 96px));
-    margin: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
     padding: 8px 12px 10px;
-    border-radius: 17px;
-    transform: translateX(-50%) translateY(0);
+    border-radius: 0 0 14px 14px;
+    transform: translateY(0);
   }
 
   .place-chip span {
@@ -1042,16 +1037,19 @@ dialog::backdrop {
   }
 
   .sky-panel {
-    min-height: 224px;
-    height: 28svh;
+    min-height: 260px;
+    height: 32svh;
   }
 
   .globe-card {
-    width: min(180px, 58%);
+    width: min(260px, 86%);
+  }
+
+  .globe {
+    width: 100%;
   }
 
   .place-chip {
-    bottom: 10px;
     padding: 7px 10px 8px;
   }
 
