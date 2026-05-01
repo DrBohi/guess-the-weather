@@ -107,6 +107,7 @@ const el = {
   roundText: document.querySelector("#roundText"),
   streakText: document.querySelector("#streakText"),
   progressFill: document.querySelector("#progressFill"),
+  questionCard: document.querySelector(".question-card"),
   questionContent: document.querySelector("#questionContent"),
   questionText: document.querySelector("#questionText"),
   options: document.querySelector("#options"),
@@ -222,6 +223,7 @@ function renderRound() {
   });
 
   requestAnimationFrame(() => {
+    holdQuestionCardHeight();
     el.questionContent.classList.remove("is-loading", "is-entering");
   });
 }
@@ -258,7 +260,7 @@ function answerQuestion(button, selected) {
     if (state.today.score >= 14) state.stats.wins += 1;
     el.nextButton.textContent = "Done for today";
   } else {
-    el.nextButton.textContent = "Next place";
+    el.nextButton.textContent = "Next";
   }
 
   saveState();
@@ -310,6 +312,7 @@ function resetDebugDay() {
   saveState();
   updateHud();
   animatePlaceChange(["Fresh daily run", "Debug reset"]);
+  releaseQuestionCardHeight();
   el.questionContent.classList.remove("is-loading", "is-entering");
   el.questionText.textContent = "Today is unlocked again.";
   el.options.replaceChildren();
@@ -320,13 +323,22 @@ function resetDebugDay() {
 
 function setLoading(isLoading) {
   el.nextButton.disabled = isLoading;
-  el.nextButton.textContent = isLoading ? "Loading..." : "Next";
   if (isLoading) {
+    holdQuestionCardHeight();
     el.questionContent.classList.add("is-loading");
     el.questionText.textContent = "";
     el.options.replaceChildren();
     el.feedback.textContent = "";
   }
+}
+
+function holdQuestionCardHeight() {
+  const height = Math.ceil(el.questionCard.getBoundingClientRect().height);
+  el.questionCard.style.minHeight = `${height}px`;
+}
+
+function releaseQuestionCardHeight() {
+  el.questionCard.style.minHeight = "";
 }
 
 async function getWeather(place, roundIndex) {

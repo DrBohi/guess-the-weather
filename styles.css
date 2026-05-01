@@ -348,7 +348,7 @@ h2 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin: 18px 0 12px;
+  margin: 0;
 }
 
 .score-strip div,
@@ -382,6 +382,7 @@ h2 {
 
 .progress-track {
   height: 10px;
+  margin: 16px 0;
   overflow: hidden;
   border-radius: 999px;
   background: rgba(24, 32, 51, 0.1);
@@ -397,14 +398,24 @@ h2 {
 
 .question-card {
   min-height: 356px;
+  display: flex;
+  flex-direction: column;
   margin-top: 18px;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 26px;
   background: rgba(255, 255, 255, 0.52);
+  transition: min-height 0.24s ease;
+}
+
+.question-next {
+  width: 100%;
+  flex: 0 0 auto;
+  margin-top: 18px;
 }
 
 .question-content {
+  flex: 1 1 auto;
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.24s ease, transform 0.24s ease;
@@ -658,17 +669,17 @@ dialog::backdrop {
   }
 
   .app-shell {
-    width: 100%;
+    width: min(100%, 440px);
     min-height: 100svh;
-    gap: 8px;
-    padding: 6px 8px 10px;
+    gap: 12px;
+    padding: 10px 16px 14px;
   }
 
   .sky-panel {
-    min-height: 250px;
-    height: 30svh;
-    max-height: 280px;
-    border-radius: 20px;
+    min-height: 262px;
+    height: 31svh;
+    max-height: 300px;
+    border-radius: 22px;
   }
 
   .sun-orb {
@@ -727,8 +738,8 @@ dialog::backdrop {
   }
 
   .game-panel {
-    padding: 14px;
-    border-radius: 19px;
+    padding: 16px;
+    border-radius: 22px;
   }
 
   .eyebrow {
@@ -749,13 +760,13 @@ dialog::backdrop {
 
   .score-strip {
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 7px;
-    margin: 9px 0 8px;
+    gap: 8px;
+    margin: 0;
   }
 
   .score-strip div {
-    padding: 8px 9px;
-    border-radius: 13px;
+    padding: 9px 10px;
+    border-radius: 15px;
   }
 
   .score-strip strong {
@@ -763,10 +774,10 @@ dialog::backdrop {
   }
 
   .question-card {
-    min-height: 260px;
+    min-height: 310px;
     margin-top: 10px;
-    padding: 13px;
-    border-radius: 18px;
+    padding: 15px;
+    border-radius: 20px;
   }
 
   .topbar {
@@ -806,6 +817,12 @@ dialog::backdrop {
 
   .progress-track {
     height: 8px;
+    margin: 12px 0;
+  }
+
+  .question-next {
+    min-height: 48px;
+    margin-top: 12px;
   }
 
   .actions {
@@ -816,9 +833,12 @@ dialog::backdrop {
   .primary-button,
   .secondary-button {
     min-height: 46px;
-    flex: 1;
     padding: 0 14px;
     border-radius: 15px;
+  }
+
+  .secondary-button {
+    width: 100%;
   }
 }
 
@@ -845,8 +865,8 @@ dialog::backdrop {
   }
 
   .sky-panel {
-    min-height: 208px;
-    height: 27svh;
+    min-height: 224px;
+    height: 28svh;
   }
 
   .globe-card {
@@ -862,7 +882,7 @@ dialog::backdrop {
   }
 
   .game-panel {
-    padding: 12px;
+    padding: 14px;
   }
 
   h1 {
@@ -870,8 +890,8 @@ dialog::backdrop {
   }
 
   .question-card {
-    min-height: 238px;
-    padding: 11px;
+    min-height: 286px;
+    padding: 13px;
   }
 
   .option-button {

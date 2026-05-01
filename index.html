@@ -56,7 +56,12 @@
             <div class="options" id="options"></div>
             <p class="feedback" id="feedback" aria-live="polite"></p>
           </div>
+          <button class="primary-button question-next" id="nextButton" type="button" disabled>Start</button>
         </article>
+
+        <div class="progress-track" aria-hidden="true">
+          <div id="progressFill"></div>
+        </div>
 
         <div class="score-strip" aria-label="Daily progress">
           <div>
@@ -73,13 +78,8 @@
           </div>
         </div>
 
-        <div class="progress-track" aria-hidden="true">
-          <div id="progressFill"></div>
-        </div>
-
         <footer class="actions">
           <button class="secondary-button" id="statsButton" type="button">Stats</button>
-          <button class="primary-button" id="nextButton" type="button" disabled>Start</button>
         </footer>
       </section>
     </main>
