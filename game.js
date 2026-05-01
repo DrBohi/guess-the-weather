@@ -107,6 +107,7 @@ const el = {
   roundText: document.querySelector("#roundText"),
   streakText: document.querySelector("#streakText"),
   progressFill: document.querySelector("#progressFill"),
+  questionContent: document.querySelector("#questionContent"),
   questionText: document.querySelector("#questionText"),
   options: document.querySelector("#options"),
   feedback: document.querySelector("#feedback"),
@@ -201,6 +202,7 @@ async function startRound() {
 function renderRound() {
   const { place, question, weather, options } = currentRound;
   animatePlaceChange(place);
+  el.questionContent.classList.add("is-entering");
   el.questionText.textContent = question.text;
   el.feedback.textContent = "";
   el.nextButton.disabled = true;
@@ -217,6 +219,10 @@ function renderRound() {
     `;
     button.addEventListener("click", () => answerQuestion(button, range));
     el.options.append(button);
+  });
+
+  requestAnimationFrame(() => {
+    el.questionContent.classList.remove("is-loading", "is-entering");
   });
 }
 
@@ -304,6 +310,7 @@ function resetDebugDay() {
   saveState();
   updateHud();
   animatePlaceChange(["Fresh daily run", "Debug reset"]);
+  el.questionContent.classList.remove("is-loading", "is-entering");
   el.questionText.textContent = "Today is unlocked again.";
   el.options.replaceChildren();
   el.feedback.textContent = "Debug reset complete. Start a new 20-question run whenever you like.";
@@ -315,8 +322,10 @@ function setLoading(isLoading) {
   el.nextButton.disabled = isLoading;
   el.nextButton.textContent = isLoading ? "Loading..." : "Next";
   if (isLoading) {
+    el.questionContent.classList.add("is-loading");
+    el.questionText.textContent = "";
     el.options.replaceChildren();
-    el.feedback.textContent = "Checking the sky...";
+    el.feedback.textContent = "";
   }
 }
 

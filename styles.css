@@ -40,7 +40,10 @@ body {
 .app-logo {
   width: 54px;
   height: 54px;
+  max-width: 54px;
+  max-height: 54px;
   display: block;
+  flex: 0 0 54px;
   border-radius: 0;
   box-shadow: none;
   object-fit: contain;
@@ -393,11 +396,24 @@ h2 {
 }
 
 .question-card {
+  min-height: 356px;
   margin-top: 18px;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 26px;
   background: rgba(255, 255, 255, 0.52);
+}
+
+.question-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.question-content.is-loading,
+.question-content.is-entering {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
 .actions {
@@ -608,6 +624,10 @@ dialog::backdrop {
 }
 
 @media (max-width: 520px) {
+  body {
+    min-height: 100svh;
+  }
+
   .floating-actions {
     top: max(10px, env(safe-area-inset-top));
     right: max(10px, env(safe-area-inset-right));
@@ -617,6 +637,9 @@ dialog::backdrop {
   .app-logo {
     width: 46px;
     height: 46px;
+    max-width: 46px;
+    max-height: 46px;
+    flex-basis: 46px;
   }
 
   .corner-logo {
@@ -634,14 +657,105 @@ dialog::backdrop {
     height: 42px;
   }
 
+  .app-shell {
+    width: 100%;
+    min-height: 100svh;
+    gap: 8px;
+    padding: 6px 8px 10px;
+  }
+
+  .sky-panel {
+    min-height: 250px;
+    height: 30svh;
+    max-height: 280px;
+    border-radius: 20px;
+  }
+
+  .sun-orb {
+    width: 86px;
+    top: 28px;
+    right: 42px;
+  }
+
+  .cloud {
+    transform: scale(0.72);
+  }
+
+  .cloud-a {
+    top: 39%;
+    left: -5%;
+  }
+
+  .cloud-b {
+    top: 19%;
+    left: 30%;
+    transform: scale(0.58);
+  }
+
+  .rain {
+    height: 120px;
+  }
+
+  .globe-card {
+    bottom: 12px;
+    width: min(205px, 56%);
+  }
+
+  .globe {
+    filter: drop-shadow(0 18px 30px rgba(21, 69, 128, 0.24));
+  }
+
+  .earth-image {
+    box-shadow:
+      inset -18px -18px 30px rgba(3, 19, 65, 0.34),
+      inset 10px 10px 22px rgba(255, 255, 255, 0.14),
+      0 0 0 5px rgba(147, 224, 255, 0.26);
+  }
+
+  .place-chip {
+    width: min(235px, 118%);
+    padding: 8px 12px 10px;
+    border-radius: 17px;
+  }
+
+  .place-chip span {
+    font-size: 0.66rem;
+  }
+
+  .place-chip strong {
+    font-size: 1.18rem;
+  }
+
+  .game-panel {
+    padding: 14px;
+    border-radius: 19px;
+  }
+
+  .eyebrow {
+    margin-bottom: 3px;
+    font-size: 0.66rem;
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 9vw, 2.35rem);
+    line-height: 0.95;
+  }
+
+  h2 {
+    margin-top: 0;
+    font-size: clamp(1.15rem, 5vw, 1.38rem);
+    line-height: 1.08;
+  }
+
   .score-strip {
     grid-template-columns: 1fr 1fr 1fr;
-    margin-top: 16px;
+    gap: 7px;
+    margin: 9px 0 8px;
   }
 
   .score-strip div {
-    padding: 12px 9px;
-    border-radius: 16px;
+    padding: 8px 9px;
+    border-radius: 13px;
   }
 
   .score-strip strong {
@@ -649,20 +763,126 @@ dialog::backdrop {
   }
 
   .question-card {
-    padding: 17px;
+    min-height: 260px;
+    margin-top: 10px;
+    padding: 13px;
+    border-radius: 18px;
   }
 
   .topbar {
     flex-direction: column;
   }
 
+  .options {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .option-button {
+    min-height: 48px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 15px;
+  }
+
+  .option-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    font-size: 1rem;
+  }
+
+  .option-label {
+    font-size: 0.96rem;
+  }
+
+  .feedback {
+    min-height: 30px;
+    margin-top: 10px;
+    font-size: 0.92rem;
+    line-height: 1.28;
+  }
+
+  .progress-track {
+    height: 8px;
+  }
+
   .actions {
-    margin-top: 22px;
+    margin-top: 12px;
+    gap: 10px;
   }
 
   .primary-button,
   .secondary-button {
+    min-height: 46px;
     flex: 1;
     padding: 0 14px;
+    border-radius: 15px;
+  }
+}
+
+@media (max-width: 390px), (max-height: 760px) and (max-width: 520px) {
+  .app-logo {
+    width: 38px;
+    height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    flex-basis: 38px;
+  }
+
+  .debug-button {
+    min-height: 38px;
+    padding: 0 9px;
+    border-radius: 13px;
+    font-size: 0.68rem;
+  }
+
+  .icon-button {
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+
+  .sky-panel {
+    min-height: 208px;
+    height: 27svh;
+  }
+
+  .globe-card {
+    width: min(178px, 53%);
+  }
+
+  .place-chip {
+    padding: 7px 10px 8px;
+  }
+
+  .place-chip strong {
+    font-size: 1.03rem;
+  }
+
+  .game-panel {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 1.78rem;
+  }
+
+  .question-card {
+    min-height: 238px;
+    padding: 11px;
+  }
+
+  .option-button {
+    min-height: 43px;
+  }
+
+  .score-strip div {
+    padding: 7px 8px;
+  }
+
+  .feedback {
+    min-height: 24px;
   }
 }
