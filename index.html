@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Guess The Weather</title>
     <link rel="preconnect" href="https://api.open-meteo.com" />
-    <link rel="stylesheet" href="styles.css?v=20260501-intro-fix" />
+    <link rel="stylesheet" href="styles.css?v=20260501-city-photos" />
   </head>
   <body class="intro-active">
     <section class="intro-screen" id="introScreen" aria-label="Guess The Weather intro">
@@ -37,9 +37,8 @@
           <div class="globe" id="globe">
             <img
               class="earth-image"
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/The_Earth_seen_from_Apollo_17_%28cropped%29.jpg/960px-The_Earth_seen_from_Apollo_17_%28cropped%29.jpg"
-              alt="Earth"
-              onerror="this.onerror=null; this.src='assets/earth.svg';"
+              src="assets/earth.svg"
+              alt="City photo loading"
             />
           </div>
         </div>
@@ -110,6 +109,6 @@
       </div>
     </dialog>
 
-    <script src="game.js?v=20260501-intro-fix"></script>
+    <script src="game.js?v=20260501-city-photos"></script>
   </body>
 </html>

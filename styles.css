@@ -290,32 +290,35 @@ button {
   position: absolute;
   left: 50%;
   bottom: 20%;
-  width: min(350px, 68%);
+  width: min(380px, 80%);
   transform: translateX(-50%);
   text-align: center;
 }
 
 .globe {
-  filter: drop-shadow(0 30px 48px rgba(21, 69, 128, 0.3));
-  animation: breathe 5s ease-in-out infinite;
-  transform-origin: 50% 50%;
-  will-change: transform;
-}
-
-.globe.place-spin {
-  animation: placeSpin 1.05s cubic-bezier(0.16, 0.9, 0.24, 1), breathe 5s ease-in-out 1.05s infinite;
+  width: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 56px rgba(21, 69, 128, 0.28);
+  aspect-ratio: 4 / 3;
+  background: #1a2a4a;
 }
 
 .earth-image {
   width: 100%;
+  height: 100%;
   display: block;
-  border-radius: 50%;
-  background: radial-gradient(circle, #1a65bf, #06225f);
-  box-shadow:
-    inset -24px -26px 40px rgba(3, 19, 65, 0.42),
-    inset 14px 14px 28px rgba(255, 255, 255, 0.18),
-    0 0 0 8px rgba(147, 224, 255, 0.3);
-  transform: rotate(-7deg);
+  object-fit: cover;
+  border-radius: 22px;
+  transition: opacity 0.22s ease;
+}
+
+.earth-image.photo-fade-out {
+  opacity: 0;
+}
+
+.earth-image.photo-fade-in {
+  animation: photoFadeIn 0.5s ease forwards;
 }
 
 .place-chip {
@@ -678,6 +681,11 @@ dialog::backdrop {
   line-height: 1.45;
 }
 
+@keyframes photoFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes drift {
   from { transform: translateX(-4%) rotate(-8deg); }
   to { transform: translateX(5%) rotate(-5deg); }
@@ -753,7 +761,7 @@ dialog::backdrop {
 
   .globe-card {
     bottom: 28px;
-    width: min(270px, 68%);
+    width: min(300px, 76%);
   }
 
   .game-panel {
@@ -872,21 +880,19 @@ dialog::backdrop {
     left: 50%;
     right: auto;
     bottom: 16px;
-    width: 170px;
+    width: min(200px, 62%);
     transform: translateX(-50%);
   }
 
   .globe {
     width: 100%;
     margin: 0;
-    filter: drop-shadow(0 18px 30px rgba(21, 69, 128, 0.24));
+    border-radius: 16px;
+    box-shadow: 0 14px 36px rgba(21, 69, 128, 0.22);
   }
 
   .earth-image {
-    box-shadow:
-      inset -18px -18px 30px rgba(3, 19, 65, 0.34),
-      inset 10px 10px 22px rgba(255, 255, 255, 0.14),
-      0 0 0 5px rgba(147, 224, 255, 0.26);
+    border-radius: 16px;
   }
 
   .place-chip {
@@ -1041,11 +1047,7 @@ dialog::backdrop {
   }
 
   .globe-card {
-    width: 148px;
-  }
-
-  .globe {
-    width: 100%;
+    width: min(180px, 58%);
   }
 
   .place-chip {

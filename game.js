@@ -2,36 +2,36 @@ const TOTAL_ROUNDS = 20;
 const STORAGE_KEY = "guess-the-weather-state-v1";
 
 const places = [
-  ["Reykjavik", "Iceland", 64.1466, -21.9426],
-  ["Marrakesh", "Morocco", 31.6295, -7.9811],
-  ["Queenstown", "New Zealand", -45.0312, 168.6626],
-  ["Kyoto", "Japan", 35.0116, 135.7681],
-  ["Lima", "Peru", -12.0464, -77.0428],
-  ["Cape Town", "South Africa", -33.9249, 18.4241],
-  ["Tromso", "Norway", 69.6492, 18.9553],
-  ["Hanoi", "Vietnam", 21.0278, 105.8342],
-  ["Anchorage", "United States", 61.2176, -149.8997],
-  ["Buenos Aires", "Argentina", -34.6037, -58.3816],
-  ["Cairo", "Egypt", 30.0444, 31.2357],
-  ["Dublin", "Ireland", 53.3498, -6.2603],
-  ["Nairobi", "Kenya", -1.2921, 36.8219],
-  ["Singapore", "Singapore", 1.3521, 103.8198],
-  ["Vancouver", "Canada", 49.2827, -123.1207],
-  ["Seoul", "South Korea", 37.5665, 126.978],
-  ["Lisbon", "Portugal", 38.7223, -9.1393],
-  ["Ushuaia", "Argentina", -54.8019, -68.303],
-  ["Jaipur", "India", 26.9124, 75.7873],
-  ["Hobart", "Australia", -42.8821, 147.3272],
-  ["Bogota", "Colombia", 4.711, -74.0721],
-  ["Stockholm", "Sweden", 59.3293, 18.0686],
-  ["Honolulu", "United States", 21.3099, -157.8581],
-  ["Edinburgh", "Scotland", 55.9533, -3.1883],
-  ["Doha", "Qatar", 25.2854, 51.531],
-  ["Auckland", "New Zealand", -36.8509, 174.7645],
-  ["Santiago", "Chile", -33.4489, -70.6693],
-  ["Helsinki", "Finland", 60.1699, 24.9384],
-  ["Antananarivo", "Madagascar", -18.8792, 47.5079],
-  ["Zurich", "Switzerland", 47.3769, 8.5417]
+  ["Reykjavik", "Iceland", 64.1466, -21.9426, "Reykjavík"],
+  ["Marrakesh", "Morocco", 31.6295, -7.9811, "Marrakesh"],
+  ["Queenstown", "New Zealand", -45.0312, 168.6626, "Queenstown,_New_Zealand"],
+  ["Kyoto", "Japan", 35.0116, 135.7681, "Kyoto"],
+  ["Lima", "Peru", -12.0464, -77.0428, "Lima"],
+  ["Cape Town", "South Africa", -33.9249, 18.4241, "Cape_Town"],
+  ["Tromso", "Norway", 69.6492, 18.9553, "Tromsø"],
+  ["Hanoi", "Vietnam", 21.0278, 105.8342, "Hanoi"],
+  ["Anchorage", "United States", 61.2176, -149.8997, "Anchorage,_Alaska"],
+  ["Buenos Aires", "Argentina", -34.6037, -58.3816, "Buenos_Aires"],
+  ["Cairo", "Egypt", 30.0444, 31.2357, "Cairo"],
+  ["Dublin", "Ireland", 53.3498, -6.2603, "Dublin"],
+  ["Nairobi", "Kenya", -1.2921, 36.8219, "Nairobi"],
+  ["Singapore", "Singapore", 1.3521, 103.8198, "Singapore"],
+  ["Vancouver", "Canada", 49.2827, -123.1207, "Vancouver"],
+  ["Seoul", "South Korea", 37.5665, 126.978, "Seoul"],
+  ["Lisbon", "Portugal", 38.7223, -9.1393, "Lisbon"],
+  ["Ushuaia", "Argentina", -54.8019, -68.303, "Ushuaia"],
+  ["Jaipur", "India", 26.9124, 75.7873, "Jaipur"],
+  ["Hobart", "Australia", -42.8821, 147.3272, "Hobart,_Tasmania"],
+  ["Bogota", "Colombia", 4.711, -74.0721, "Bogotá"],
+  ["Stockholm", "Sweden", 59.3293, 18.0686, "Stockholm"],
+  ["Honolulu", "United States", 21.3099, -157.8581, "Honolulu"],
+  ["Edinburgh", "Scotland", 55.9533, -3.1883, "Edinburgh"],
+  ["Doha", "Qatar", 25.2854, 51.531, "Doha"],
+  ["Auckland", "New Zealand", -36.8509, 174.7645, "Auckland"],
+  ["Santiago", "Chile", -33.4489, -70.6693, "Santiago"],
+  ["Helsinki", "Finland", 60.1699, 24.9384, "Helsinki"],
+  ["Antananarivo", "Madagascar", -18.8792, 47.5079, "Antananarivo"],
+  ["Zurich", "Switzerland", 47.3769, 8.5417, "Zürich"]
 ];
 
 const questionTypes = [
@@ -298,7 +298,14 @@ function answerDetail() {
 }
 
 function showLockedOut() {
-  animatePlaceChange(["Daily complete", "Come back tomorrow"]);
+  el.placeChip.classList.remove("place-reveal");
+  el.placeChip.classList.add("is-changing");
+  setTimeout(() => {
+    el.placeCountry.textContent = "Come back tomorrow";
+    el.placeName.textContent = "Daily complete";
+    el.placeChip.classList.remove("is-changing");
+    el.placeChip.classList.add("place-reveal");
+  }, 420);
   el.questionText.textContent = "You finished today's Guess The Weather.";
   el.options.replaceChildren();
   el.feedback.textContent = `Final score: ${state.today.score}/${TOTAL_ROUNDS}. A fresh set unlocks at midnight.`;
@@ -307,17 +314,52 @@ function showLockedOut() {
   updateHud();
 }
 
-function spinGlobe() {
-  el.globe.classList.remove("place-spin");
-  void el.globe.offsetWidth;
-  el.globe.classList.add("place-spin");
+async function fetchCityImage(wikiSlug) {
+  if (!wikiSlug) return null;
+  try {
+    const res = await Promise.race([
+      fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiSlug)}`),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 4000))
+    ]);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.originalimage?.source || data.thumbnail?.source || null;
+  } catch {
+    return null;
+  }
+}
+
+function setCityPhoto(src, altText) {
+  const img = el.globe.querySelector(".earth-image");
+  if (!src) return;
+  const next = new Image();
+  next.onload = () => {
+    img.classList.add("photo-fade-out");
+    setTimeout(() => {
+      img.src = src;
+      img.alt = altText;
+      img.classList.remove("photo-fade-out");
+      img.classList.add("photo-fade-in");
+      setTimeout(() => img.classList.remove("photo-fade-in"), 500);
+    }, 220);
+  };
+  next.onerror = () => {};
+  next.src = src;
 }
 
 function animatePlaceChange(place) {
-  const [name, country] = place;
+  const [name, country, , , wikiSlug] = place;
   el.placeChip.classList.remove("place-reveal");
   el.placeChip.classList.add("is-changing");
-  spinGlobe();
+
+  // Fade out the current photo
+  const img = el.globe.querySelector(".earth-image");
+  img.classList.add("photo-fade-out");
+
+  // Fetch city photo in parallel — don't block place chip update
+  if (wikiSlug) {
+    fetchCityImage(wikiSlug).then(src => setCityPhoto(src, name));
+  }
 
   setTimeout(() => {
     el.placeCountry.textContent = country;
@@ -332,7 +374,14 @@ function resetDebugDay() {
   currentRound = null;
   saveState();
   updateHud();
-  animatePlaceChange(["Fresh daily run", "Debug reset"]);
+  el.placeChip.classList.remove("place-reveal");
+  el.placeChip.classList.add("is-changing");
+  setTimeout(() => {
+    el.placeCountry.textContent = "Debug reset";
+    el.placeName.textContent = "Fresh daily run";
+    el.placeChip.classList.remove("is-changing");
+    el.placeChip.classList.add("place-reveal");
+  }, 420);
   releaseQuestionCardHeight();
   el.questionContent.classList.remove("is-loading", "is-entering");
   el.questionText.textContent = "Today is unlocked again.";
