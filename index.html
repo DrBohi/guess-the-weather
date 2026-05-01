@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess The Weather</title>
+    <link rel="preconnect" href="https://api.open-meteo.com" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <img class="app-logo corner-logo" src="assets/guess_the_weather_logo.png" alt="Guess The Weather logo" />
+    <div class="floating-actions" aria-label="Game controls">
+      <button class="debug-button" id="debugButton" type="button" title="Reset today's debug run">Debug</button>
+      <button class="icon-button" id="shareButton" type="button" title="Share score" aria-label="Share score">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14" />
+        </svg>
+      </button>
+    </div>
+    <main class="app-shell">
+      <section class="sky-panel" aria-label="Animated weather scene">
+        <div class="aurora"></div>
+        <div class="sun-orb"></div>
+        <div class="cloud cloud-a"></div>
+        <div class="cloud cloud-b"></div>
+        <div class="rain rain-a"></div>
+        <div class="rain rain-b"></div>
+        <div class="mist"></div>
+        <div class="globe-card">
+          <div class="globe" id="globe">
+            <img
+              class="earth-image"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/The_Earth_seen_from_Apollo_17_%28cropped%29.jpg/960px-The_Earth_seen_from_Apollo_17_%28cropped%29.jpg"
+              alt="Earth"
+              onerror="this.onerror=null; this.src='assets/earth.svg';"
+            />
+          </div>
+          <div class="place-chip">
+            <span id="placeCountry">Worldwide</span>
+            <strong id="placeName">Loading...</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="game-panel" aria-labelledby="gameTitle">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Daily weather puzzle</p>
+            <h1 id="gameTitle">Guess The Weather</h1>
+          </div>
+        </header>
+
+        <article class="question-card">
+          <h2 id="questionText">What is the weather like there right now?</h2>
+          <div class="options" id="options"></div>
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+        </article>
+
+        <div class="score-strip" aria-label="Daily progress">
+          <div>
+            <span>Score</span>
+            <strong id="scoreText">0</strong>
+          </div>
+          <div>
+            <span>Round</span>
+            <strong><span id="roundText">1</span>/20</strong>
+          </div>
+          <div>
+            <span>Streak</span>
+            <strong id="streakText">0</strong>
+          </div>
+        </div>
+
+        <div class="progress-track" aria-hidden="true">
+          <div id="progressFill"></div>
+        </div>
+
+        <footer class="actions">
+          <button class="secondary-button" id="statsButton" type="button">Stats</button>
+          <button class="primary-button" id="nextButton" type="button" disabled>Start</button>
+        </footer>
+      </section>
+    </main>
+
+    <dialog id="statsDialog">
+      <div class="dialog-card">
+        <button class="icon-button close-button" id="closeStats" type="button" title="Close stats" aria-label="Close stats">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <p class="eyebrow">Your climate instincts</p>
+        <h2>Daily Stats</h2>
+        <div class="stat-grid">
+          <div><span>Today</span><strong id="modalToday">0/20</strong></div>
+          <div><span>Best</span><strong id="modalBest">0</strong></div>
+          <div><span>Played</span><strong id="modalPlayed">0</strong></div>
+          <div><span>Wins</span><strong id="modalWins">0</strong></div>
+        </div>
+        <p id="lockoutText" class="dialog-note"></p>
+      </div>
+    </dialog>
+
+    <script src="game.js"></script>
+  </body>
+</html>
