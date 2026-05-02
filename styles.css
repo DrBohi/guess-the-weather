@@ -119,13 +119,13 @@ body.intro-active {
 }
 
 .app-shell,
-.corner-logo,
+.logo-button,
 .floating-actions {
   transition: opacity 0.5s ease, transform 0.5s ease, filter 0.5s ease;
 }
 
 body.intro-active .app-shell,
-body.intro-active .corner-logo,
+body.intro-active .logo-button,
 body.intro-active .floating-actions {
   opacity: 0;
   transform: translateY(16px) scale(0.985);
@@ -160,6 +160,19 @@ body.intro-active .floating-actions {
   top: max(16px, env(safe-area-inset-top));
   left: max(16px, env(safe-area-inset-left));
   z-index: 20;
+}
+
+.logo-button {
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.debug-button[hidden] {
+  display: none;
 }
 
 button {
@@ -347,10 +360,6 @@ button {
   opacity: 0;
   transform: translateX(-50%) translateY(10px);
   filter: blur(4px);
-}
-
-.place-chip.place-reveal {
-  animation: placeReveal 0.36s ease-out;
 }
 
 .place-chip span {
@@ -704,6 +713,16 @@ h2 {
   line-height: 0.95;
 }
 
+.curve-rating {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .bell-curve {
   position: relative;
   height: 150px;
@@ -1009,11 +1028,6 @@ dialog::backdrop {
   100% { transform: translateY(0) rotate(720deg) scale(1); filter: drop-shadow(0 30px 48px rgba(21, 69, 128, 0.3)); }
 }
 
-@keyframes placeReveal {
-  0% { opacity: 0; transform: translateX(-50%) translateY(10px); filter: blur(5px); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); filter: blur(0); }
-}
-
 @keyframes markerDrop {
   0% { opacity: 0; transform: translateX(-50%) translateY(-18px) scale(0.96); }
   100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
@@ -1073,6 +1087,11 @@ dialog::backdrop {
   .corner-logo {
     top: max(10px, env(safe-area-inset-top));
     left: max(10px, env(safe-area-inset-left));
+  }
+
+  .logo-button {
+    width: 46px;
+    height: 46px;
   }
 
   .debug-button {
@@ -1299,6 +1318,11 @@ dialog::backdrop {
     max-width: 38px;
     max-height: 38px;
     flex-basis: 38px;
+  }
+
+  .logo-button {
+    width: 38px;
+    height: 38px;
   }
 
   .debug-button {

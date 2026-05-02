@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Guess The Weather</title>
     <link rel="preconnect" href="https://api.open-meteo.com" />
-    <link rel="stylesheet" href="styles.css?v=20260501-curve-explorer" />
+    <link rel="stylesheet" href="styles.css?v=20260501-hidden-debug" />
   </head>
   <body class="intro-active">
     <section class="intro-screen" id="introScreen" aria-label="Guess The Weather intro">
@@ -15,9 +15,11 @@
       <p class="intro-copy">Twenty places are waiting today. Guess carefully: your streak likes confidence.</p>
       <button class="primary-button intro-button" id="beginButton" type="button">Begin</button>
     </section>
-    <img class="app-logo corner-logo" src="assets/guess_the_weather_logo.png" alt="Guess The Weather logo" />
+    <button class="logo-button corner-logo" id="logoButton" type="button" aria-label="Guess The Weather">
+      <img class="app-logo" src="assets/guess_the_weather_logo.png" alt="Guess The Weather logo" />
+    </button>
     <div class="floating-actions" aria-label="Game controls">
-      <button class="debug-button" id="debugButton" type="button" title="Reset today's debug run">Debug</button>
+      <button class="debug-button" id="debugButton" type="button" title="Reset today's debug run" hidden>Debug</button>
       <button class="icon-button" id="shareButton" type="button" title="Share score" aria-label="Share score">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14" />
@@ -103,12 +105,11 @@
           <div><span>Today</span><strong id="modalToday">0/20</strong></div>
           <div><span>Best</span><strong id="modalBest">0</strong></div>
           <div><span>Played</span><strong id="modalPlayed">0</strong></div>
-          <div><span>Wins</span><strong id="modalWins">0</strong></div>
         </div>
         <p id="lockoutText" class="dialog-note"></p>
       </div>
     </dialog>
 
-    <script src="game.js?v=20260501-curve-explorer"></script>
+    <script src="game.js?v=20260501-hidden-debug"></script>
   </body>
 </html>

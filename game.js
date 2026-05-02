@@ -40,6 +40,7 @@ const places = [
 const el = {
   introScreen: document.querySelector("#introScreen"),
   beginButton: document.querySelector("#beginButton"),
+  logoButton: document.querySelector("#logoButton"),
   placeCountry: document.querySelector("#placeCountry"),
   placeName: document.querySelector("#placeName"),
   placeChip: document.querySelector(".place-chip"),
@@ -62,7 +63,6 @@ const el = {
   modalToday: document.querySelector("#modalToday"),
   modalBest: document.querySelector("#modalBest"),
   modalPlayed: document.querySelector("#modalPlayed"),
-  modalWins: document.querySelector("#modalWins"),
   lockoutText: document.querySelector("#lockoutText")
 };
 
@@ -79,6 +79,8 @@ let awaitingNext = false;
 let introStarted = false;
 let resultsShowing = false;
 let displayedScore = Number.parseInt(document.querySelector("#scoreText")?.textContent || "0", 10);
+let logoTapCount = 0;
+let logoTapTimer = null;
 
 init();
 
@@ -98,6 +100,7 @@ function init() {
 
 function bindEvents() {
   el.beginButton.addEventListener("click", beginGame);
+  el.logoButton.addEventListener("click", handleLogoTap);
 
   el.nextButton.addEventListener("click", () => {
     if (state.today.finished) {
@@ -121,6 +124,21 @@ function bindEvents() {
   el.closeStats.addEventListener("click", () => el.statsDialog.close());
   el.shareButton.addEventListener("click", shareScore);
   el.debugButton.addEventListener("click", resetDebugDay);
+}
+
+function handleLogoTap() {
+  logoTapCount += 1;
+  clearTimeout(logoTapTimer);
+
+  if (logoTapCount >= 3) {
+    el.debugButton.hidden = false;
+    logoTapCount = 0;
+    return;
+  }
+
+  logoTapTimer = setTimeout(() => {
+    logoTapCount = 0;
+  }, 1200);
 }
 
 function beginGame() {
@@ -256,7 +274,6 @@ function submitTemperatureGuess() {
     state.today.finished = true;
     state.stats.played += 1;
     if (state.stats.best == null || state.today.score < state.stats.best) state.stats.best = state.today.score;
-    if (state.today.score <= 90) state.stats.wins += 1;
     el.nextButton.textContent = "See results";
   } else {
     el.nextButton.textContent = "Next place";
@@ -273,13 +290,11 @@ function answerDetail() {
 
 function showLockedOut() {
   resultsShowing = false;
-  el.placeChip.classList.remove("place-reveal");
   el.placeChip.classList.add("is-changing");
   setTimeout(() => {
     el.placeCountry.textContent = "Come back tomorrow";
     el.placeName.textContent = "Daily complete";
     el.placeChip.classList.remove("is-changing");
-    el.placeChip.classList.add("place-reveal");
   }, 420);
   el.questionText.textContent = "You finished today's Guess The Weather.";
   el.options.replaceChildren();
@@ -303,9 +318,10 @@ function showResults() {
     <section class="results-card" aria-label="Daily score results">
       <div class="results-score">
         <span>Your score</span>
-        <strong id="resultScorePreview">${score}</strong>
-        <em id="resultRatingPreview">${rating.label}</em>
+        <strong>${score}</strong>
+        <em>${rating.label}</em>
       </div>
+      <p class="curve-rating" id="exploreRatingPreview">${rating.label}</p>
       <div class="bell-curve" style="--score-position: ${marker}%">
         <svg viewBox="0 0 320 130" role="img" aria-label="Score distribution bell curve">
           <defs>
@@ -351,13 +367,11 @@ function updateResultPreview(score) {
   const rating = resultRating(score);
   const marker = clamp((score / RESULT_MAX_SCORE) * 100, 4, 96);
   const curve = el.options.querySelector(".bell-curve");
-  const scoreText = el.options.querySelector("#resultScorePreview");
-  const ratingText = el.options.querySelector("#resultRatingPreview");
+  const ratingText = el.options.querySelector("#exploreRatingPreview");
   const bubble = el.options.querySelector("#resultBubble");
   const copy = el.options.querySelector("#resultCopyPreview");
 
   if (curve) curve.style.setProperty("--score-position", `${marker}%`);
-  if (scoreText) scoreText.textContent = score;
   if (ratingText) ratingText.textContent = rating.label;
   if (bubble) bubble.textContent = score;
   if (copy) copy.textContent = rating.copy;
@@ -432,7 +446,6 @@ function setCityPhoto(src, altText) {
 
 function animatePlaceChange(place) {
   const [name, country, , , wikiSlug] = place;
-  el.placeChip.classList.remove("place-reveal");
   el.placeChip.classList.add("is-changing");
 
   // Fade out the current photo
@@ -448,7 +461,6 @@ function animatePlaceChange(place) {
     el.placeCountry.textContent = country;
     el.placeName.textContent = name;
     el.placeChip.classList.remove("is-changing");
-    el.placeChip.classList.add("place-reveal");
   }, 420);
 }
 
@@ -458,13 +470,11 @@ function resetDebugDay() {
   resultsShowing = false;
   saveState();
   updateHud();
-  el.placeChip.classList.remove("place-reveal");
   el.placeChip.classList.add("is-changing");
   setTimeout(() => {
     el.placeCountry.textContent = "Debug reset";
     el.placeName.textContent = "Fresh daily run";
     el.placeChip.classList.remove("is-changing");
-    el.placeChip.classList.add("place-reveal");
   }, 420);
   releaseQuestionCardHeight();
   el.questionContent.classList.remove("is-loading", "is-entering");
@@ -589,7 +599,6 @@ function openStats() {
   el.modalToday.textContent = `${state.today.score} pts`;
   el.modalBest.textContent = state.stats.best == null ? "—" : `${state.stats.best} pts`;
   el.modalPlayed.textContent = state.stats.played;
-  el.modalWins.textContent = state.stats.wins;
   el.lockoutText.textContent = state.today.finished
     ? "You are locked out until the next local midnight, just like a daily puzzle should be."
     : `${TOTAL_ROUNDS - state.today.round} guesses remain today.`;
@@ -623,15 +632,15 @@ function freshState() {
   return {
     day: todayKey,
     today: { round: 0, score: 0, streak: 0, finished: false },
-    stats: { best: null, played: 0, wins: 0 }
+    stats: { best: null, played: 0 }
   };
 }
 
 function resetIfNewDay() {
   if (state.day === todayKey) return;
-  const stats = state.stats || { best: 0, played: 0, wins: 0 };
+  const stats = state.stats || { best: null, played: 0 };
   state = freshState();
-  state.stats = stats;
+  state.stats = { best: stats.best ?? null, played: stats.played ?? 0 };
   saveState();
 }
 
