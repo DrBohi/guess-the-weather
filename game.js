@@ -1,5 +1,8 @@
 const TOTAL_ROUNDS = 20;
-const STORAGE_KEY = "guess-the-weather-state-v1";
+const STORAGE_KEY = "guess-the-weather-state-v2";
+const TEMP_MIN = -20;
+const TEMP_MAX = 120;
+const RESULT_MAX_SCORE = 220;
 
 const places = [
   ["Reykjavik", "Iceland", 64.1466, -21.9426, "Reykjavík"],
@@ -32,70 +35,6 @@ const places = [
   ["Helsinki", "Finland", 60.1699, 24.9384, "Helsinki"],
   ["Antananarivo", "Madagascar", -18.8792, 47.5079, "Antananarivo"],
   ["Zurich", "Switzerland", 47.3769, 8.5417, "Zürich"]
-];
-
-const questionTypes = [
-  {
-    id: "temp",
-    label: "Temperature",
-    text: "What is the temperature there right now?",
-    unit: "°F",
-    icon: "°",
-    getValue: (w) => Math.round(cToF(w.temperature_2m)),
-    ranges: [
-      ["Frigid", -10, 24],
-      ["Chilly", 25, 49],
-      ["Mild", 50, 69],
-      ["Warm", 70, 84],
-      ["Hot", 85, 109]
-    ],
-    format: (range) => `${range[0]} · ${range[1]}-${range[2]}°F`
-  },
-  {
-    id: "rain",
-    label: "Precipitation",
-    text: "How much rain or snow is falling there this hour?",
-    unit: "mm",
-    icon: "〽",
-    getValue: (w) => Number(w.precipitation || 0),
-    ranges: [
-      ["Dry", 0, 0],
-      ["Light sprinkle", 0.1, 1.9],
-      ["Steady rain", 2, 5.9],
-      ["Heavy burst", 6, 40]
-    ],
-    format: (range) => range[1] === range[2] ? `${range[0]} · 0 mm` : `${range[0]} · ${range[1]}-${range[2]} mm`
-  },
-  {
-    id: "wind",
-    label: "Wind",
-    text: "How windy is it there right now?",
-    unit: "mph",
-    icon: "~",
-    getValue: (w) => Math.round(kmhToMph(w.wind_speed_10m)),
-    ranges: [
-      ["Calm", 0, 5],
-      ["Breezy", 6, 14],
-      ["Windy", 15, 25],
-      ["Blustery", 26, 60]
-    ],
-    format: (range) => `${range[0]} · ${range[1]}-${range[2]} mph`
-  },
-  {
-    id: "cloud",
-    label: "Cloud Cover",
-    text: "How cloudy is the sky there?",
-    unit: "%",
-    icon: "%",
-    getValue: (w) => Math.round(w.cloud_cover),
-    ranges: [
-      ["Clear", 0, 20],
-      ["Partly cloudy", 21, 55],
-      ["Mostly cloudy", 56, 84],
-      ["Overcast", 85, 100]
-    ],
-    format: (range) => `${range[0]} · ${range[1]}-${range[2]}%`
-  }
 ];
 
 const el = {
@@ -138,6 +77,8 @@ let state = loadState();
 let currentRound = null;
 let awaitingNext = false;
 let introStarted = false;
+let resultsShowing = false;
+let displayedScore = Number.parseInt(document.querySelector("#scoreText")?.textContent || "0", 10);
 
 init();
 
@@ -160,9 +101,19 @@ function bindEvents() {
 
   el.nextButton.addEventListener("click", () => {
     if (state.today.finished) {
-      openStats();
+      if (resultsShowing) {
+        shareScore();
+        return;
+      }
+      showResults();
       return;
     }
+
+    if (currentRound && !currentRound.answered) {
+      submitTemperatureGuess();
+      return;
+    }
+
     startRound();
   });
 
@@ -192,23 +143,21 @@ async function startRound() {
   if (awaitingNext || state.today.finished) return;
 
   awaitingNext = true;
+  resultsShowing = false;
   setLoading(true);
 
   try {
     const roundIndex = state.today.round;
     const place = getDailyPlace(roundIndex);
-    const question = getDailyQuestion(roundIndex);
     const weather = await getWeather(place, roundIndex);
-    const value = question.getValue(weather.data);
-    const answer = rangeForValue(question, value);
+    const value = Math.round(cToF(weather.data.temperature_2m));
 
     currentRound = {
       place,
-      question,
       weather,
       value,
-      answer,
-      options: buildOptions(question, answer, roundIndex)
+      guess: 65,
+      answered: false
     };
 
     renderRound();
@@ -222,26 +171,16 @@ async function startRound() {
 }
 
 function renderRound() {
-  const { place, question, weather, options } = currentRound;
+  const { place } = currentRound;
   animatePlaceChange(place);
   el.questionContent.classList.add("is-entering");
-  el.questionText.textContent = question.text;
+  el.questionText.textContent = `What is the temperature in ${place[0]} right now?`;
   el.feedback.textContent = "";
-  el.nextButton.disabled = true;
-  el.nextButton.textContent = "Next";
+  el.nextButton.disabled = false;
+  el.nextButton.textContent = "Submit guess";
   el.options.replaceChildren();
 
-  options.forEach((range, index) => {
-    const button = document.createElement("button");
-    button.className = "option-button";
-    button.type = "button";
-    button.innerHTML = `
-      <span class="option-icon" aria-hidden="true">${question.icon}</span>
-      <span class="option-label">${question.format(range)}</span>
-    `;
-    button.addEventListener("click", () => answerQuestion(button, range));
-    el.options.append(button);
-  });
+  el.options.append(createTemperatureSlider());
 
   requestAnimationFrame(() => {
     holdQuestionCardHeight();
@@ -249,55 +188,91 @@ function renderRound() {
   });
 }
 
-function answerQuestion(button, selected) {
-  if (!currentRound || el.nextButton.disabled === false) return;
+function createTemperatureSlider() {
+  const wrap = document.createElement("div");
+  wrap.className = "temperature-game";
+  wrap.innerHTML = `
+    <div class="temperature-readout">
+      <span class="temperature-value" id="temperatureGuess">65°F</span>
+    </div>
+    <div class="temperature-slider-wrap">
+      <div class="temperature-track-wrap">
+        <span class="guess-marker" id="guessMarker" aria-hidden="true"></span>
+        <input class="temperature-slider" id="temperatureSlider" type="range" min="${TEMP_MIN}" max="${TEMP_MAX}" value="65" step="1" aria-label="Temperature guess in Fahrenheit" />
+      </div>
+      <div class="temperature-scale" aria-hidden="true">
+        <span>${TEMP_MIN}°F</span>
+        <span>50°F</span>
+        <span>${TEMP_MAX}°F</span>
+      </div>
+    </div>
+  `;
 
-  const isCorrect = selected === currentRound.answer;
-  const buttons = Array.from(document.querySelectorAll(".option-button"));
-  buttons.forEach((optionButton, index) => {
-    optionButton.disabled = true;
-    if (currentRound.options[index] === currentRound.answer) optionButton.classList.add("correct");
+  const slider = wrap.querySelector("#temperatureSlider");
+  const readout = wrap.querySelector("#temperatureGuess");
+  slider.addEventListener("input", () => {
+    currentRound.guess = Number(slider.value);
+    readout.textContent = `${currentRound.guess}°F`;
   });
 
-  if (!isCorrect) button.classList.add("incorrect");
+  return wrap;
+}
 
+function submitTemperatureGuess() {
+  if (!currentRound || currentRound.answered) return;
+
+  currentRound.answered = true;
+  const slider = el.options.querySelector("#temperatureSlider");
+  const readout = el.options.querySelector("#temperatureGuess");
+  const sliderWrap = el.options.querySelector(".temperature-slider-wrap");
+  const marker = el.options.querySelector("#guessMarker");
+  const miss = Math.abs(currentRound.guess - currentRound.value);
+  const previousScore = state.today.score;
   state.today.round += 1;
-  if (isCorrect) {
-    state.today.score += 1;
+  state.today.score += miss;
+
+  if (miss <= 3) {
     state.today.streak += 1;
-    state.stats.best = Math.max(state.stats.best, state.today.score);
   } else {
     state.today.streak = 0;
   }
 
-  const detail = answerDetail();
-  el.feedback.textContent = isCorrect
-    ? `Correct. ${detail}`
-    : `Not quite. ${currentRound.place[0]} is ${detail}`;
+  if (slider && marker && sliderWrap && readout) {
+    marker.style.left = `${temperaturePercent(currentRound.guess)}%`;
+    sliderWrap.classList.add("is-revealed");
+    animateSliderToValue(slider, readout, currentRound.guess, currentRound.value);
+  }
+
+  const praise = miss === 0
+    ? "Perfect."
+    : miss <= 3
+      ? "Very close."
+      : miss <= 8
+        ? "Nice read."
+        : "That one drifted.";
+  el.feedback.textContent = `${praise} You guessed ${currentRound.guess}°F. ${currentRound.place[0]} is ${currentRound.value}°F, so that adds ${miss} point${miss === 1 ? "" : "s"}. Lower is better.`;
 
   if (state.today.round >= TOTAL_ROUNDS) {
     state.today.finished = true;
     state.stats.played += 1;
-    if (state.today.score >= 14) state.stats.wins += 1;
-    el.nextButton.textContent = "Done for today";
+    if (state.stats.best == null || state.today.score < state.stats.best) state.stats.best = state.today.score;
+    if (state.today.score <= 90) state.stats.wins += 1;
+    el.nextButton.textContent = "See results";
   } else {
-    el.nextButton.textContent = "Next";
+    el.nextButton.textContent = "Next place";
   }
 
   saveState();
-  updateHud();
+  updateHud(previousScore);
   el.nextButton.disabled = false;
 }
 
 function answerDetail() {
-  const { question, value, answer } = currentRound;
-  const valueText = question.id === "rain"
-    ? `${Number(value).toFixed(value > 0 && value < 1 ? 1 : 0)} ${question.unit}`
-    : `${Math.round(value)}${question.unit}`;
-  return `${answer[0].toLowerCase()} right now (${valueText}).`;
+  return `${Math.round(currentRound.value)}°F right now.`;
 }
 
 function showLockedOut() {
+  resultsShowing = false;
   el.placeChip.classList.remove("place-reveal");
   el.placeChip.classList.add("is-changing");
   setTimeout(() => {
@@ -308,10 +283,115 @@ function showLockedOut() {
   }, 420);
   el.questionText.textContent = "You finished today's Guess The Weather.";
   el.options.replaceChildren();
-  el.feedback.textContent = `Final score: ${state.today.score}/${TOTAL_ROUNDS}. A fresh set unlocks at midnight.`;
+  el.feedback.textContent = `Final score: ${state.today.score} points. Lower is better.`;
   el.nextButton.disabled = false;
-  el.nextButton.textContent = "View stats";
+  el.nextButton.textContent = "See results";
   updateHud();
+}
+
+function showResults() {
+  resultsShowing = true;
+  const score = state.today.score;
+  const rating = resultRating(score);
+  const marker = clamp((score / RESULT_MAX_SCORE) * 100, 4, 96);
+
+  releaseQuestionCardHeight();
+  el.questionContent.classList.add("is-entering");
+  el.questionText.textContent = "Today's results";
+  el.options.replaceChildren();
+  el.options.innerHTML = `
+    <section class="results-card" aria-label="Daily score results">
+      <div class="results-score">
+        <span>Your score</span>
+        <strong id="resultScorePreview">${score}</strong>
+        <em id="resultRatingPreview">${rating.label}</em>
+      </div>
+      <div class="bell-curve" style="--score-position: ${marker}%">
+        <svg viewBox="0 0 320 130" role="img" aria-label="Score distribution bell curve">
+          <defs>
+            <linearGradient id="curveStroke" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stop-color="#35c7b7" />
+              <stop offset="48%" stop-color="#ffcb66" />
+              <stop offset="100%" stop-color="#e34e6f" />
+            </linearGradient>
+          </defs>
+          <path class="bell-fill" d="M18 112 C52 112 62 95 82 66 C104 34 128 18 160 18 C192 18 216 34 238 66 C258 95 268 112 302 112 Z" />
+          <path class="bell-line" d="M18 112 C52 112 62 95 82 66 C104 34 128 18 160 18 C192 18 216 34 238 66 C258 95 268 112 302 112" />
+        </svg>
+        <span class="score-marker">
+          <span class="score-pin"></span>
+          <span class="score-bubble" id="resultBubble">${score}</span>
+        </span>
+      </div>
+      <div class="curve-labels" aria-hidden="true">
+        <span>Elite</span>
+        <span>Most players</span>
+        <span>Spicy</span>
+      </div>
+      <input class="curve-slider" id="curveSlider" type="range" min="0" max="${RESULT_MAX_SCORE}" value="${score}" step="1" aria-label="Explore score distribution" />
+      <p id="resultCopyPreview">${rating.copy}</p>
+    </section>
+  `;
+  el.feedback.textContent = "Lower scores land farther left. A fresh set unlocks at midnight.";
+  el.nextButton.disabled = false;
+  el.nextButton.textContent = "Share score";
+  bindResultExplorer();
+  requestAnimationFrame(() => {
+    el.questionContent.classList.remove("is-entering");
+  });
+}
+
+function bindResultExplorer() {
+  const slider = el.options.querySelector("#curveSlider");
+  if (!slider) return;
+  slider.addEventListener("input", () => updateResultPreview(Number(slider.value)));
+}
+
+function updateResultPreview(score) {
+  const rating = resultRating(score);
+  const marker = clamp((score / RESULT_MAX_SCORE) * 100, 4, 96);
+  const curve = el.options.querySelector(".bell-curve");
+  const scoreText = el.options.querySelector("#resultScorePreview");
+  const ratingText = el.options.querySelector("#resultRatingPreview");
+  const bubble = el.options.querySelector("#resultBubble");
+  const copy = el.options.querySelector("#resultCopyPreview");
+
+  if (curve) curve.style.setProperty("--score-position", `${marker}%`);
+  if (scoreText) scoreText.textContent = score;
+  if (ratingText) ratingText.textContent = rating.label;
+  if (bubble) bubble.textContent = score;
+  if (copy) copy.textContent = rating.copy;
+}
+
+function resultRating(score) {
+  if (score <= 45) {
+    return {
+      label: "Forecast savant",
+      copy: "That is an absurdly sharp day: barely more than two degrees off per city."
+    };
+  }
+  if (score <= 75) {
+    return {
+      label: "Excellent read",
+      copy: "You were consistently close across twenty places. That is a genuinely strong run."
+    };
+  }
+  if (score <= 115) {
+    return {
+      label: "Solid instincts",
+      copy: "A comfortable score: a few surprises, but your temperature sense held together."
+    };
+  }
+  if (score <= 160) {
+    return {
+      label: "Weather curious",
+      copy: "Some climates threw you off today. Tomorrow is a clean slate."
+    };
+  }
+  return {
+    label: "Bold guesses",
+    copy: "You played with confidence. The atmosphere did not always agree."
+  };
 }
 
 async function fetchCityImage(wikiSlug) {
@@ -331,7 +411,10 @@ async function fetchCityImage(wikiSlug) {
 
 function setCityPhoto(src, altText) {
   const img = el.globe.querySelector(".earth-image");
-  if (!src) return;
+  if (!src) {
+    img.classList.remove("photo-fade-out");
+    return;
+  }
   const next = new Image();
   next.onload = () => {
     img.classList.add("photo-fade-out");
@@ -343,7 +426,7 @@ function setCityPhoto(src, altText) {
       setTimeout(() => img.classList.remove("photo-fade-in"), 500);
     }, 220);
   };
-  next.onerror = () => {};
+  next.onerror = () => img.classList.remove("photo-fade-out");
   next.src = src;
 }
 
@@ -372,6 +455,7 @@ function animatePlaceChange(place) {
 function resetDebugDay() {
   state.today = { round: 0, score: 0, streak: 0, finished: false };
   currentRound = null;
+  resultsShowing = false;
   saveState();
   updateHud();
   el.placeChip.classList.remove("place-reveal");
@@ -417,7 +501,7 @@ async function getWeather(place, roundIndex) {
   url.search = new URLSearchParams({
     latitude: lat,
     longitude: lon,
-    current: "temperature_2m,precipitation,cloud_cover,wind_speed_10m",
+    current: "temperature_2m",
     timezone: "auto"
   }).toString();
 
@@ -446,42 +530,64 @@ function estimatedWeather(place, roundIndex) {
   const seasonal = Math.cos(((new Date().getMonth() + 1) / 12) * Math.PI * 2) * (lat > 0 ? -1 : 1);
   const baseC = 23 - Math.abs(lat) * 0.35 + seasonal * 8;
   return {
-    temperature_2m: clamp(baseC + seeded(seed, -8, 8), -25, 42),
-    precipitation: Math.max(0, seeded(seed + 9, -1.2, 7.5)),
-    cloud_cover: clamp(seeded(seed + 17, 8, 98), 0, 100),
-    wind_speed_10m: clamp(seeded(seed + 31, 2, 42), 0, 75)
+    temperature_2m: clamp(baseC + seeded(seed, -8, 8), -25, 42)
   };
-}
-
-function buildOptions(question, answer, roundIndex) {
-  const wrong = question.ranges.filter((range) => range !== answer);
-  const shuffledWrong = shuffle(wrong, hash(`${todayKey}-wrong-${roundIndex}`)).slice(0, 2);
-  return shuffle([answer, ...shuffledWrong], hash(`${todayKey}-options-${roundIndex}`));
-}
-
-function rangeForValue(question, value) {
-  return question.ranges.find((range) => value >= range[1] && value <= range[2]) || question.ranges.at(-1);
 }
 
 function getDailyPlace(roundIndex) {
   return shuffle(places, hash(`${todayKey}-places`))[roundIndex % places.length];
 }
 
-function getDailyQuestion(roundIndex) {
-  const index = hash(`${todayKey}-question-${roundIndex}`) % questionTypes.length;
-  return questionTypes[index];
-}
-
-function updateHud() {
-  el.scoreText.textContent = state.today.score;
+function updateHud(previousScore = displayedScore) {
+  animateScore(previousScore, state.today.score);
   el.roundText.textContent = Math.min(state.today.round + 1, TOTAL_ROUNDS);
   el.streakText.textContent = state.today.streak;
   el.progressFill.style.width = `${(state.today.round / TOTAL_ROUNDS) * 100}%`;
 }
 
+function animateScore(from, to) {
+  const start = Number.isFinite(from) ? from : displayedScore;
+  const end = Number.isFinite(to) ? to : state.today.score;
+  displayedScore = end;
+
+  if (start === end) {
+    el.scoreText.textContent = end;
+    return;
+  }
+
+  const duration = 520;
+  const started = performance.now();
+  const tick = (now) => {
+    const progress = clamp((now - started) / duration, 0, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.scoreText.textContent = Math.round(start + (end - start) * eased);
+    if (progress < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function animateSliderToValue(slider, readout, from, to) {
+  slider.disabled = true;
+  const duration = 620;
+  const started = performance.now();
+  const tick = (now) => {
+    const progress = clamp((now - started) / duration, 0, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value = Math.round(from + (to - from) * eased);
+    slider.value = value;
+    readout.textContent = `${value}°F`;
+    if (progress < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function temperaturePercent(value) {
+  return clamp(((value - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * 100, 0, 100);
+}
+
 function openStats() {
-  el.modalToday.textContent = `${state.today.score}/${TOTAL_ROUNDS}`;
-  el.modalBest.textContent = state.stats.best;
+  el.modalToday.textContent = `${state.today.score} pts`;
+  el.modalBest.textContent = state.stats.best == null ? "—" : `${state.stats.best} pts`;
   el.modalPlayed.textContent = state.stats.played;
   el.modalWins.textContent = state.stats.wins;
   el.lockoutText.textContent = state.today.finished
@@ -491,7 +597,7 @@ function openStats() {
 }
 
 async function shareScore() {
-  const text = `Guess The Weather ${todayKey}: ${state.today.score}/${TOTAL_ROUNDS}`;
+  const text = `Guess The Weather ${todayKey}: ${state.today.score} points. Lower is better.`;
   try {
     if (navigator.share) {
       await navigator.share({ text });
@@ -517,7 +623,7 @@ function freshState() {
   return {
     day: todayKey,
     today: { round: 0, score: 0, streak: 0, finished: false },
-    stats: { best: 0, played: 0, wins: 0 }
+    stats: { best: null, played: 0, wins: 0 }
   };
 }
 
@@ -559,10 +665,6 @@ function seeded(seed, min, max) {
 
 function cToF(celsius) {
   return celsius * 9 / 5 + 32;
-}
-
-function kmhToMph(kmh) {
-  return kmh * 0.621371;
 }
 
 function clamp(value, min, max) {
